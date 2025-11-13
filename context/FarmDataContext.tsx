@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { Farm, Machine, Collaborator, FuelLog, MaintenanceLog, FuelPrice, HourMeterLog, MaintenanceType, WarehouseItem } from '../types';
+import { Farm, Machine, Collaborator, FuelLog, MaintenanceLog, FuelPrice, HourMeterLog, MaintenanceType, WarehouseItem, StockHistoryLog } from '../types';
 import { MOCK_FARM_DATA } from '../data/mock';
 import { useAuth } from './AuthContext';
 
@@ -15,7 +15,7 @@ interface FarmDataContextType {
   updateFuelLog: (log: FuelLog) => void;
   addMaintenanceLog: (log: Omit<MaintenanceLog, 'id'>) => void;
   updateFuelPrices: (prices: FuelPrice[]) => void;
-  addWarehouseItem: (item: Omit<WarehouseItem, 'id' | 'createdAt'>) => void;
+  addWarehouseItem: (item: Omit<WarehouseItem, 'id' | 'createdAt' | 'stockHistory'>) => void;
   updateWarehouseItem: (item: WarehouseItem) => void;
   deleteWarehouseItem: (itemId: string) => void;
   getMachineById: (id: string) => Machine | undefined;
@@ -162,7 +162,19 @@ export const FarmDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const updatedWarehouseItems = tempFarmState.warehouseItems.map(item => {
         const partUsed = log.partsUsed?.find(p => p.itemId === item.id);
         if (partUsed) {
-          return { ...item, stockQuantity: item.stockQuantity - partUsed.quantity };
+          const newStockQuantity = item.stockQuantity - partUsed.quantity;
+          const newHistoryEntry: StockHistoryLog = {
+              date: newLog.date,
+              quantityChange: -partUsed.quantity,
+              newStockLevel: newStockQuantity,
+              reason: `Saída p/ Manut. #${newLog.id.slice(-6)}`,
+              referenceId: newLog.id
+          };
+          return { 
+            ...item, 
+            stockQuantity: newStockQuantity,
+            stockHistory: [...(item.stockHistory || []), newHistoryEntry]
+          };
         }
         return item;
       });
@@ -227,17 +239,44 @@ export const FarmDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateAndStoreFarm(updatedFarm);
   };
 
-  const addWarehouseItem = (item: Omit<WarehouseItem, 'id' | 'createdAt'>) => {
+  const addWarehouseItem = (item: Omit<WarehouseItem, 'id' | 'createdAt' | 'stockHistory'>) => {
     const newItem: WarehouseItem = {
         ...item,
         id: `item_${Date.now()}`,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        stockHistory: [{
+            date: new Date().toISOString(),
+            quantityChange: item.stockQuantity,
+            newStockLevel: item.stockQuantity,
+            reason: 'Entrada Inicial',
+        }]
     };
     updateAndStoreFarm({ ...farm, warehouseItems: [...farm.warehouseItems, newItem] });
   };
 
   const updateWarehouseItem = (updatedItem: WarehouseItem) => {
-    const updatedItems = farm.warehouseItems.map(item => item.id === updatedItem.id ? updatedItem : item);
+    const updatedItems = farm.warehouseItems.map(item => {
+        if (item.id === updatedItem.id) {
+            const originalItem = farm.warehouseItems.find(i => i.id === updatedItem.id);
+            if (!originalItem) return updatedItem; // Should not happen
+
+            const quantityChange = updatedItem.stockQuantity - originalItem.stockQuantity;
+            
+            let updatedHistory = item.stockHistory || [];
+            if (quantityChange !== 0) {
+                const newHistoryEntry: StockHistoryLog = {
+                    date: new Date().toISOString(),
+                    quantityChange: quantityChange,
+                    newStockLevel: updatedItem.stockQuantity,
+                    reason: 'Ajuste Manual de Estoque',
+                };
+                updatedHistory = [...updatedHistory, newHistoryEntry];
+            }
+
+            return { ...updatedItem, stockHistory: updatedHistory };
+        }
+        return item;
+    });
     updateAndStoreFarm({ ...farm, warehouseItems: updatedItems });
   };
 

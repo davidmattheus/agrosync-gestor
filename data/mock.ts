@@ -56,10 +56,23 @@ export const MOCK_FARM_DATA: Omit<Farm, 'name'> = {
     { fuelType: FuelType.GASOLINE, price: 5.80 },
   ],
   warehouseItems: [
-    { id: 'item_1', name: 'Filtro de Óleo LF9009', code: 'FLE-559009', unitValue: 150.75, stockQuantity: 15, createdAt: '2023-10-01T10:00:00Z' },
-    { id: 'item_2', name: 'Óleo de Motor 15W40 (Balde 20L)', code: 'LUB-15W40-20', unitValue: 450.00, stockQuantity: 8, createdAt: '2023-10-01T10:00:00Z' },
-    { id: 'item_3', name: 'Filtro de Ar Primário 479-8989', code: 'CAT-4798989', unitValue: 280.50, stockQuantity: 4, createdAt: '2023-10-02T11:00:00Z' },
-    { id: 'item_4', name: 'Parafuso Sextavado M12x1.5', code: 'PAR-M12X1.5', unitValue: 2.50, stockQuantity: 250, createdAt: '2023-09-15T09:00:00Z' },
-    { id: 'item_5', name: 'Graxa Lítio MP2 (1kg)', code: 'GRA-MP2-1', unitValue: 35.00, stockQuantity: 12, createdAt: '2023-10-05T14:00:00Z' },
+    { id: 'item_1', name: 'Filtro de Óleo LF9009', code: 'FLE-559009', unitValue: 150.75, stockQuantity: 15, createdAt: '2023-10-01T10:00:00Z', stockHistory: [
+      { date: '2023-10-01T10:00:00Z', quantityChange: 20, newStockLevel: 20, reason: 'Entrada Inicial' },
+      { date: '2023-10-20T11:00:00Z', quantityChange: -5, newStockLevel: 15, reason: 'Saída p/ Manut. #maint_3', referenceId: 'maint_3' }
+    ] },
+    { id: 'item_2', name: 'Óleo de Motor 15W40 (Balde 20L)', code: 'LUB-15W40-20', unitValue: 450.00, stockQuantity: 8, createdAt: '2023-10-01T10:00:00Z', stockHistory: [
+      { date: '2023-10-01T10:00:00Z', quantityChange: 10, newStockLevel: 10, reason: 'Entrada Inicial' },
+      { date: '2023-09-01T14:00:00Z', quantityChange: -2, newStockLevel: 8, reason: 'Saída p/ Manut. #maint_1', referenceId: 'maint_1' }
+    ] },
+    { id: 'item_3', name: 'Filtro de Ar Primário 479-8989', code: 'CAT-4798989', unitValue: 280.50, stockQuantity: 4, createdAt: '2023-10-02T11:00:00Z', stockHistory: [
+      { date: '2023-10-02T11:00:00Z', quantityChange: 5, newStockLevel: 5, reason: 'Entrada Inicial' },
+      { date: '2023-10-15T08:00:00Z', quantityChange: -1, newStockLevel: 4, reason: 'Saída p/ Manut. #maint_2', referenceId: 'maint_2' }
+    ] },
+    { id: 'item_4', name: 'Parafuso Sextavado M12x1.5', code: 'PAR-M12X1.5', unitValue: 2.50, stockQuantity: 250, createdAt: '2023-09-15T09:00:00Z', stockHistory: [
+      { date: '2023-09-15T09:00:00Z', quantityChange: 250, newStockLevel: 250, reason: 'Entrada Inicial' }
+    ] },
+    { id: 'item_5', name: 'Graxa Lítio MP2 (1kg)', code: 'GRA-MP2-1', unitValue: 35.00, stockQuantity: 12, createdAt: '2023-10-05T14:00:00Z', stockHistory: [
+      { date: '2023-10-05T14:00:00Z', quantityChange: 12, newStockLevel: 12, reason: 'Entrada Inicial' }
+    ] },
   ],
 };

@@ -126,7 +126,7 @@ const MachineDetail: React.FC = () => {
     }, [machine, farm.fuelLogs, farm.maintenanceLogs]);
 
     const handleDelete = () => {
-        if (machine && window.confirm('Tem certeza que deseja excluir esta máquina? Todos os históricos de custos associados também serão perdidos.')) {
+        if (machine && window.confirm('Tem certeza que deseja excluir esta máquina? Todos os históricos associados serão mantidos, mas a máquina será removida.')) {
             deleteMachine(machine.id);
             navigate('/machines');
         }

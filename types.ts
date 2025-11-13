@@ -121,6 +121,14 @@ export interface FuelPrice {
     price: number;
 }
 
+export interface StockHistoryLog {
+    date: string; // ISO 8601 format
+    quantityChange: number; // e.g., +10 for addition, -2 for deduction
+    newStockLevel: number;
+    reason: string; // e.g., "Entrada Inicial", "Ajuste Manual", "Saída p/ Manutenção"
+    referenceId?: string; // e.g., maintenanceLogId
+}
+
 export interface WarehouseItem {
     id: string;
     name: string;
@@ -128,6 +136,7 @@ export interface WarehouseItem {
     unitValue: number;
     stockQuantity: number;
     createdAt: string; // ISO 8601 format
+    stockHistory?: StockHistoryLog[];
 }
 
 export interface Farm {

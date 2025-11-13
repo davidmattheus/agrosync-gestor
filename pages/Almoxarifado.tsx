@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import { useFarmData } from '../context/FarmDataContext';
 import { useAuth } from '../context/AuthContext';
 import { WarehouseItem, UserRole } from '../types';
 import { PlusIcon, EditIcon, TrashIcon, XCircleIcon, FileTextIcon, AlertTriangleIcon } from '../components/ui/Icons';
 
-const initialItemState: Omit<WarehouseItem, 'id' | 'createdAt'> = {
+const initialItemState: Omit<WarehouseItem, 'id' | 'createdAt' | 'stockHistory'> = {
     name: '',
     code: '',
     unitValue: 0,
@@ -45,7 +46,7 @@ const WarehouseItemFormModal: React.FC<{ item: WarehouseItem | null; onClose: ()
             return;
         }
         if (item) {
-            updateWarehouseItem({ ...formData, id: item.id, createdAt: item.createdAt });
+            updateWarehouseItem({ ...formData, id: item.id, createdAt: item.createdAt, stockHistory: item.stockHistory });
         } else {
             addWarehouseItem(formData);
         }
@@ -88,12 +89,69 @@ const WarehouseItemFormModal: React.FC<{ item: WarehouseItem | null; onClose: ()
     );
 };
 
+const WarehouseItemHistoryModal: React.FC<{ item: WarehouseItem; onClose: () => void; }> = ({ item, onClose }) => {
+    const sortedHistory = useMemo(() => {
+        return item.stockHistory ? [...item.stockHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+    }, [item.stockHistory]);
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start p-4 pt-16">
+            <Card className="w-full max-w-2xl relative">
+                <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+                    <XCircleIcon size={28}/>
+                </button>
+                <h3 className="text-xl font-bold text-agro-gray-800 mb-2">Histórico de Estoque</h3>
+                <p className="text-agro-gray-600 mb-6">{item.name} ({item.code})</p>
+                
+                <div className="max-h-[60vh] overflow-y-auto">
+                    <table className="w-full text-left">
+                        <thead className="border-b sticky top-0 bg-white">
+                            <tr className="text-sm text-agro-gray-600">
+                                <th className="p-2">Data</th>
+                                <th className="p-2">Motivo</th>
+                                <th className="p-2 text-center">Alteração</th>
+                                <th className="p-2 text-center">Estoque Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sortedHistory.length > 0 ? sortedHistory.map((log, index) => (
+                                <tr key={index} className="border-b">
+                                    <td className="p-2">{new Date(log.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                                    <td className="p-2">
+                                        {log.referenceId && log.referenceId.startsWith('maint_') ? (
+                                            <Link to={`/maintenance/${log.referenceId}`} className="text-blue-600 hover:underline">{log.reason}</Link>
+                                        ) : (
+                                            log.reason
+                                        )}
+                                    </td>
+                                    <td className={`p-2 text-center font-semibold ${log.quantityChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {log.quantityChange > 0 ? `+${log.quantityChange}` : log.quantityChange}
+                                    </td>
+                                    <td className="p-2 text-center font-bold">{log.newStockLevel}</td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan={4} className="p-4 text-center text-gray-500">Nenhum histórico encontrado.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="flex justify-end pt-4 mt-4 border-t">
+                    <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Fechar</button>
+                </div>
+            </Card>
+        </div>
+    );
+};
+
 const Warehouse: React.FC = () => {
   const { farm: { warehouseItems }, loading, deleteWarehouseItem } = useFarmData();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<WarehouseItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [historyModalItem, setHistoryModalItem] = useState<WarehouseItem | null>(null);
 
   const canManage = user?.role === UserRole.ADMIN;
 
@@ -156,6 +214,7 @@ const Warehouse: React.FC = () => {
       </div>
       
       {isModalOpen && canManage && <WarehouseItemFormModal item={editingItem} onClose={() => setIsModalOpen(false)} />}
+      {historyModalItem && <WarehouseItemHistoryModal item={historyModalItem} onClose={() => setHistoryModalItem(null)} />}
 
       <Card>
         <div className="mb-4">
@@ -216,6 +275,7 @@ const Warehouse: React.FC = () => {
                       {canManage && (
                         <td className="p-4">
                           <div className="flex items-center space-x-4">
+                            <button onClick={() => setHistoryModalItem(item)} className="text-green-600 hover:text-green-800" title="Ver Histórico"><FileTextIcon size={20}/></button>
                             <button onClick={() => handleOpenModal(item)} className="text-blue-600 hover:text-blue-800" title="Editar"><EditIcon size={20}/></button>
                             <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800" title="Excluir"><TrashIcon size={20}/></button>
                           </div>

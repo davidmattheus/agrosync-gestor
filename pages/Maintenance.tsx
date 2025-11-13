@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import { useFarmData } from '../context/FarmDataContext';
 import { PlusIcon, XCircleIcon, TrashIcon } from '../components/ui/Icons';
@@ -255,11 +256,12 @@ const Maintenance: React.FC = () => {
                 <th className="p-4">Responsável</th>
                 <th className="p-4">Horímetro</th>
                 <th className="p-4">Custo Total</th>
+                <th className="p-4">Ações</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="p-4 text-center">Carregando registros...</td></tr>
+                <tr><td colSpan={7} className="p-4 text-center">Carregando registros...</td></tr>
               ) : (
                 maintenanceLogs.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(log => {
                   const machine = getMachineById(log.machineId);
@@ -272,6 +274,11 @@ const Maintenance: React.FC = () => {
                       <td className="p-4">{collaborator?.name || 'N/A'}</td>
                       <td className="p-4">{log.hourMeter.toLocaleString('pt-BR')}h</td>
                       <td className="p-4 font-semibold">{log.totalCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                      <td className="p-4">
+                          <Link to={`/maintenance/${log.id}`} className="px-3 py-1.5 text-sm text-white bg-agro-green rounded-lg hover:bg-opacity-90 transition-colors whitespace-nowrap">
+                              Detalhes
+                          </Link>
+                      </td>
                     </tr>
                   )
                 })
